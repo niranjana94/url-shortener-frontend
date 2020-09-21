@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+    <title>URL-Shortner</title>
+    <style>
+        .bcontent {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>URL-Shortner</h1>
+        <div class="input-group mb-3">
+            <input type="text" class="form-control" id="url" placeholder="paste your URL"
+                aria-label="Recipient's username" aria-describedby="basic-addon2">
+            <div class="input-group-append">
+                <button class="btn btn-primary" type="button" onclick="generateshorturl()">Submit</button>
+            </div>
+        </div>
+        <div id="display"></div>
+        <div id="urls" class="bcontent">
+            <div class="table-responsive">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Long URL</th>
+                            <th>Short URL</th>
+                            <th>ClickCount</th>
+                        </tr>
+                    </thead>
+                    <tbody id="showallurl">
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script>
+        let fullurl;
+        async function generateshorturl() {
+            var data = {
+                fullurl: document.getElementById('url').value
+            }
+            try {
+                let urldet = await fetch("http://localhost:3030/generate", {
+                    method: "POST",
+                    body: JSON.stringify(data),
+                    headers: {
+                        "Content-Type": "application/json"
+                    }
+                });
+               ;
+                let details = await urldet.json();
+                
+              
+                getshorturl(details.id)
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        async function getshorturl(id) {
+            let response = await fetch(`http://localhost:3030/${id}`)
+
+            var data = await response.json();
+            
+            console.log(data);
+            
+             document.getElementById('display').innerHTML = `<a href = "./${data.shortURL}" onclick='redirecturl(${data.shortURL})'>http://127.0.0.1:5500/${data.shortURL}</a>`;;
+        }
+
+        async function redirecturl(shortURL) {
+            let response = await fetch(`http://localhost:3030/shorturl/${shortURL}`)
+
+            var data = await response.json();
+           
+            //console.log(data);
+           // location.href = data.fullURL;
+        }
+
+        async function showallurls() {
+            let response = await fetch("http://localhost:3030/showurls")
+
+            var data = await response.json();
+            //response = response.data;
+            console.log(data);
+            let trs = [];
+            data.forEach((url) => {
+                let tr = document.createElement("tr");
+                let td1 = document.createElement("td");
+                let td2 = document.createElement("td");
+                let td3 = document.createElement("td");
+               
+                td1.innerText = `<a href=http://127.0.0.1:5500/${url.shortURL}>http://127.0.0.1:5500/${url.shortURL}</a>`;
+                td2.innerText = url.fullURL;
+                td3.innerText = url.clickcount;
+                tr.append(td1, td2, td3);
+                trs.push(tr);
+            });
+            document.getElementById("showallurl").innerHTML = "";
+            document.getElementById("showallurl").append(...trs);
+            
+        }
+        showallurls();
+
+    </script>
+</body>
+
+</html>
